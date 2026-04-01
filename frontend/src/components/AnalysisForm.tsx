@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Package, Factory, Truck, Sparkles } from 'lucide-react';
 
-export function AnalysisForm({ onSubmit }: { onSubmit: () => void }) {
+export function AnalysisForm({ onSubmit }: { onSubmit: (data: { productName: string, description: string, manufacturing: string, supplyChain: string }) => void }) {
   const [formData, setFormData] = useState({
     productName: '',
     description: '',
@@ -14,7 +14,7 @@ export function AnalysisForm({ onSubmit }: { onSubmit: () => void }) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit();
+    onSubmit(formData);
   };
 
   return (

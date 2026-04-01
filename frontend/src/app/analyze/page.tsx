@@ -11,19 +11,38 @@ export default function AnalyzePage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<null | { score: number }>(null);
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = async (formData: { productName: string, description: string, manufacturing: string, supplyChain: string }) => {
     setIsAnalyzing(true);
     setResult(null);
 
-    // Mock API call / AI Processing delay
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    try {
+      const response = await fetch('http://localhost:5000/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: 'mock-user-wallet-123',
+          productName: formData.productName,
+          description: formData.description,
+          supplierInfo: formData.supplyChain + (formData.manufacturing ? ' | ' + formData.manufacturing : ''),
+        }),
+      });
 
-    // Mock result (in a real app, this would come from the backend/AI model)
-    // Generating a random score between 20 and 85 for demonstration
-    const mockScore = Math.floor(Math.random() * 65) + 20;
-    
-    setResult({ score: mockScore });
-    setIsAnalyzing(false);
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        setResult({ score: data.data.footprintScore });
+      } else {
+        console.error('API Error:', data.error);
+        setResult({ score: 50 }); // Fallback score
+      }
+    } catch (error) {
+      console.error('Failed to analyze product:', error);
+      setResult({ score: 50 }); // Fallback score
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
