@@ -67,7 +67,7 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity"
             aria-hidden="true"
           />
 
@@ -77,7 +77,7 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-zinc-950/95 border-l border-white/10 z-40 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] flex flex-col backdrop-blur-xl"
+            className="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-zinc-950/95 border-l border-white/10 z-[60] shadow-[-20px_0_40px_rgba(0,0,0,0.5)] flex flex-col backdrop-blur-xl"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-white/10 shrink-0">
