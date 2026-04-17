@@ -5,10 +5,11 @@ const Entry = require('../models/Entry');
 // @access  Public (for now)
 exports.analyzeProduct = async (req, res) => {
   try {
-    const { userId, productName, description, supplierInfo } = req.body;
+    const userId = req.user._id;
+    const { productName, description, supplierInfo } = req.body;
 
-    if (!userId || !productName || !description) {
-      return res.status(400).json({ error: 'Please provide userId, productName, and description' });
+    if (!productName || !description) {
+      return res.status(400).json({ error: 'Please provide productName and description' });
     }
 
     // TODO: Connect this to the actual Python AI service instead of a mock output
@@ -47,7 +48,7 @@ exports.analyzeProduct = async (req, res) => {
 // @access  Public (for now)
 exports.getHistory = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user._id;
 
     if (!userId) {
       return res.status(400).json({ error: 'Please provide a userId' });

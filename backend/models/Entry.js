@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 
 const EntrySchema = new mongoose.Schema({
   userId: {
-    type: String, // E.g., Web3 wallet address or simple string for now
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true,
   },
   productName: {

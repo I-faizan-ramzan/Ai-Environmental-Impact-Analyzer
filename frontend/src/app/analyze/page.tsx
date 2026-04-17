@@ -6,44 +6,55 @@ import { AnalysisForm } from '@/components/AnalysisForm';
 import { ScoreDisplay } from '@/components/ScoreDisplay';
 import { Recommendations } from '@/components/Recommendations';
 import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import axios from 'axios';
 
 export default function AnalyzePage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<null | { score: number }>(null);
+  const { user, token, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isLoading, router]);
 
   const handleAnalyze = async (formData: { productName: string, description: string, manufacturing: string, supplyChain: string }) => {
     setIsAnalyzing(true);
     setResult(null);
 
     try {
-      const response = await fetch('http://localhost:5000/api/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: 'mock-user-wallet-123',
-          productName: formData.productName,
-          description: formData.description,
-          supplierInfo: formData.supplyChain + (formData.manufacturing ? ' | ' + formData.manufacturing : ''),
-        }),
+      const response = await axios.post('http://localhost:5000/api/analyze', {
+        productName: formData.productName,
+        description: formData.description,
+        supplierInfo: formData.supplyChain + (formData.manufacturing ? ' | ' + formData.manufacturing : ''),
       });
 
-      const data = await response.json();
-
-      if (data.success && data.data) {
-        setResult({ score: data.data.footprintScore });
+      if (response.data && response.data.success) {
+        setResult({ score: response.data.data.footprintScore });
       } else {
-        console.error('API Error:', data.error);
+        console.error('API Error:', response.data.error);
         setResult({ score: 50 }); // Fallback score
       }
-    } catch (error) {
-      console.error('Failed to analyze product:', error);
+    } catch (error: any) {
+      console.error('Failed to analyze product:', error.response?.data || error.message);
       setResult({ score: 50 }); // Fallback score
     } finally {
       setIsAnalyzing(false);
     }
   };
+
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <Loader2 className="w-12 h-12 text-green-400 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center p-4 md:p-8 mt-10">
