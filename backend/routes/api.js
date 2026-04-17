@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { analyzeProduct, getHistory } = require('../controllers/analysisController');
+const { analyzeProduct, getHistory, deleteMyEntry, clearMyHistory } = require('../controllers/analysisController');
 
 const { protect } = require('../middleware/authMiddleware');
 
 // Define API routes
 router.post('/analyze', protect, analyzeProduct);
 router.get('/history', protect, getHistory);
+router.delete('/history', protect, clearMyHistory);
+router.delete('/history/:id', protect, deleteMyEntry);
 
 module.exports = router;

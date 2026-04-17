@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, History as HistoryIcon, Activity, CalendarDays, ExternalLink, RefreshCw } from 'lucide-react';
+import { X, History as HistoryIcon, Activity, CalendarDays, ExternalLink, RefreshCw, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
+import { ConfirmationModal } from './ConfirmationModal';
 
 interface HistorySidebarProps {
   isOpen: boolean;
@@ -24,6 +25,9 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
   const { user, token } = useAuth();
   const [historyItems, setHistoryItems] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Deletion Modal State
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && token) {
@@ -38,6 +42,21 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
       .finally(() => setLoading(false));
     }
   }, [isOpen, token]);
+
+  const handleDeleteConfirm = async () => {
+    if (!itemToDelete || !token) return;
+
+    try {
+      await axios.delete(`http://localhost:5000/api/history/${itemToDelete}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Remove from UI without reloading
+      setHistoryItems(prev => prev.filter(item => item._id !== itemToDelete));
+    } catch (error) {
+      console.error("Failed to delete history entry:", error);
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -48,7 +67,7 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"
             aria-hidden="true"
           />
 
@@ -58,7 +77,7 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-zinc-950/95 border-l border-white/10 z-50 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] flex flex-col backdrop-blur-xl"
+            className="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-zinc-950/95 border-l border-white/10 z-40 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] flex flex-col backdrop-blur-xl"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-white/10 shrink-0">
@@ -76,7 +95,7 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto w-full">
+            <div className="flex-1 overflow-y-auto w-full relative">
               <div className="p-6 space-y-4">
                 {!user ? (
                    <div className="text-center py-10">
@@ -96,10 +115,13 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
                       transition={{ delay: 0.1 * index }}
                       className="group relative p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all cursor-pointer"
                     >
-                      <div className="absolute top-4 right-4 text-xs font-mono text-gray-500 group-hover:text-cyan-400 transition-colors flex items-center gap-1">
-                        <ExternalLink className="w-3 h-3" />
-                        Tx
-                      </div>
+                      <button 
+                        onClick={() => setItemToDelete(item._id)}
+                        className="absolute top-4 right-4 p-2 text-gray-500 hover:text-red-400 bg-red-400/0 hover:bg-red-400/10 rounded-full transition-all"
+                        title="Delete from history"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                       
                       <h3 className="font-semibold text-lg text-gray-200 mb-1 pe-10 truncate">
                         {item.productName}
@@ -152,6 +174,15 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
                </Link>
             </div>
           </motion.div>
+
+          <ConfirmationModal
+            isOpen={itemToDelete !== null}
+            onClose={() => setItemToDelete(null)}
+            onConfirm={handleDeleteConfirm}
+            title="Remove from History?"
+            message="Are you sure you want to hide this analysis from your history sidebar? It will no longer be visible here."
+            isHardDelete={false}
+          />
         </>
       )}
     </AnimatePresence>

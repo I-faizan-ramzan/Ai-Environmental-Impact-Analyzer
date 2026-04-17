@@ -54,7 +54,7 @@ exports.getHistory = async (req, res) => {
       return res.status(400).json({ error: 'Please provide a userId' });
     }
 
-    const entries = await Entry.find({ userId }).sort({ createdAt: -1 });
+    const entries = await Entry.find({ userId, isHiddenForUser: false }).sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -64,5 +64,43 @@ exports.getHistory = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Server Error retrieving history' });
+  }
+};
+
+// @desc    Soft Delete my specific history entry (Hide from user, keep for admin)
+// @route   DELETE /api/history/:id
+// @access  Private
+exports.deleteMyEntry = async (req, res) => {
+  try {
+    const entry = await Entry.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      { isHiddenForUser: true },
+      { returnDocument: 'after' }
+    );
+
+    if (!entry) {
+      return res.status(404).json({ error: 'Entry not found or unauthorized' });
+    }
+
+    res.json({ message: 'History item hidden for user' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server Error hiding history item' });
+  }
+};
+
+// @desc    Clear all my history (Hide from user, keep for admin)
+// @route   DELETE /api/history
+// @access  Private
+exports.clearMyHistory = async (req, res) => {
+  try {
+    await Entry.updateMany(
+      { userId: req.user._id, isHiddenForUser: false },
+      { isHiddenForUser: true }
+    );
+    res.json({ message: 'All personal history hidden' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server Error hiding personal history' });
   }
 };

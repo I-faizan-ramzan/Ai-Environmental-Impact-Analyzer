@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { Loader2, Users, FileText, Search } from 'lucide-react';
+import { Loader2, Users, FileText, Search, Trash2 } from 'lucide-react';
+import { ConfirmationModal } from '@/components/ConfirmationModal';
 
 interface FullUser {
   _id: string;
@@ -20,17 +21,20 @@ interface HistoryEntry {
   productName: string;
   description: string;
   footprintScore: number;
+  isHiddenForUser: boolean;
   createdAt: string;
   userId: { _id: string; name: string; email: string };
 }
 
 export default function AdminPage() {
-  const { user, isLoading } = useAuth();
+  const { user, token, isLoading } = useAuth();
   const router = useRouter();
   
   const [users, setUsers] = useState<FullUser[]>([]);
   const [histories, setHistories] = useState<HistoryEntry[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
   // New Admin Form State
   const [newAdminName, setNewAdminName] = useState('');
@@ -45,17 +49,21 @@ export default function AdminPage() {
         router.push('/login');
       } else if (user.role !== 'admin') {
         router.push('/analyze');
-      } else {
+      } else if (token) {
         fetchAdminData();
       }
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, token]);
 
   const fetchAdminData = async () => {
     try {
       const [usersRes, historiesRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/admin/users'),
-        axios.get('http://localhost:5000/api/admin/history'),
+        axios.get('http://localhost:5000/api/admin/users', {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get('http://localhost:5000/api/admin/history', {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
       ]);
       setUsers(usersRes.data);
       setHistories(historiesRes.data);
@@ -75,6 +83,8 @@ export default function AdminPage() {
         name: newAdminName,
         email: newAdminEmail,
         password: newAdminPassword,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       setAdminSuccess('Admin created successfully!');
       setNewAdminName('');
@@ -83,6 +93,20 @@ export default function AdminPage() {
       fetchAdminData(); // refresh table
     } catch (err: any) {
       setAdminError(err.response?.data?.error || 'Failed to create admin');
+    }
+  };
+
+  const handleDeleteHistory = async () => {
+    if (!itemToDelete || !token) return;
+
+    try {
+      await axios.delete(`http://localhost:5000/api/admin/history/${itemToDelete}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setHistories(prev => prev.filter(h => h._id !== itemToDelete));
+    } catch (err) {
+      console.error('Failed to delete history', err);
+      alert('Failed to delete history record permanently.');
     }
   };
 
@@ -191,13 +215,19 @@ export default function AdminPage() {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Score</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">User</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
               <tbody className="bg-gray-900 divide-y divide-gray-800">
                 {histories.map((h) => (
                   <tr key={h._id} className="hover:bg-gray-800 transition">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-white">{h.productName}</div>
+                      <div className="text-sm font-medium text-white flex items-center gap-2">
+                        {h.productName}
+                        {h.isHiddenForUser && (
+                          <span className="px-2 py-0.5 text-[10px] uppercase font-bold bg-gray-700 text-gray-300 rounded border border-gray-500">Hidden</span>
+                        )}
+                      </div>
                       <div className="text-sm text-gray-400 truncate max-w-[200px]">{h.description}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -212,6 +242,15 @@ export default function AdminPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
                       {new Date(h.createdAt).toLocaleDateString()}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button 
+                        onClick={() => setItemToDelete(h._id)}
+                        className="text-red-400 hover:text-red-300 transition-colors p-2 cursor-pointer"
+                        title="Permanently Delete Entry"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -219,6 +258,15 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
+      
+      <ConfirmationModal
+        isOpen={itemToDelete !== null}
+        onClose={() => setItemToDelete(null)}
+        onConfirm={handleDeleteHistory}
+        title="Permanently Delete Record?"
+        message="You are about to execute a hard delete. This will permanently erase this analysis record from the primary database entirely."
+        isHardDelete={true}
+      />
     </div>
   );
 }

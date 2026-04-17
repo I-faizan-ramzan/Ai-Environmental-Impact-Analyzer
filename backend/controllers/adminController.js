@@ -85,3 +85,21 @@ exports.getUserHistory = async (req, res) => {
     res.status(500).json({ error: 'Server Error retrieving specific history' });
   }
 };
+
+// @desc    Hard delete a history entry from the platform
+// @route   DELETE /api/admin/history/:id
+// @access  Private/Admin
+exports.deleteHistory = async (req, res) => {
+  try {
+    const entry = await Entry.findByIdAndDelete(req.params.id);
+
+    if (!entry) {
+      return res.status(404).json({ error: 'Entry not found' });
+    }
+
+    res.json({ message: 'History explicitly deleted from DB' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server Error deleting history' });
+  }
+};

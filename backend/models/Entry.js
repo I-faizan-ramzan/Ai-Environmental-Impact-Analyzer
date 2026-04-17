@@ -30,6 +30,10 @@ const EntrySchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  isHiddenForUser: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 module.exports = mongoose.model('Entry', EntrySchema);
