@@ -1,41 +1,98 @@
-const Entry = require('../models/Entry');
+const BehaviorLog = require('../models/BehaviorLog');
+const User = require('../models/User');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// @desc    Analyze product and store entry
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+
+// Helper to calculate level based on points
+const calculateLevel = (points) => {
+  return Math.floor(points / 50) + 1; // Level up every 50 points
+};
+
+// @desc    Analyze human behavior and store log
 // @route   POST /api/analyze
-// @access  Public (for now)
-exports.analyzeProduct = async (req, res) => {
+// @access  Public (should be private in prod)
+exports.analyzeBehavior = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { productName, description, supplierInfo } = req.body;
+    const { electricityUsage, waterUsage, wasteGeneration, travelDistance, travelMode, dietType } = req.body;
 
-    if (!productName || !description) {
-      return res.status(400).json({ error: 'Please provide productName and description' });
+    if (electricityUsage === undefined || waterUsage === undefined) {
+      return res.status(400).json({ error: 'Please provide all behavior attributes' });
     }
 
-    // TODO: Connect this to the actual Python AI service instead of a mock output
-    // Mocking an AI scoring mechanism (1 to 100, where lower is better)
-    const mockFootprintScore = Math.floor(Math.random() * 80) + 10;
-    
-    // Mocking detailed breakdown
-    const mockAnalysisDetails = {
-      carbonEmissions: `${Math.floor(Math.random() * 50)} kg CO2`,
-      waterUsage: `${Math.floor(Math.random() * 200)} Liters`,
-      recyclability: Math.random() > 0.5 ? 'High' : 'Low',
-      summary: 'This product has an average environmental impact. Materials could be sourced more sustainably.',
+    // Connect to Google Gemini
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+
+    const prompt = `
+      You are an expert Environmental Impact Analyst and Personal Climate Coach.
+      Analyze the following weekly user behavior:
+      - Electricity Usage: ${electricityUsage} kWh
+      - Water Usage: ${waterUsage} Liters
+      - Waste Generation: ${wasteGeneration} kg
+      - Travel: ${travelDistance} km via ${travelMode}
+      - Diet: ${dietType}
+
+      TASK: Generate a comprehensive personal environmental analysis.
+      1. footprintScore: A number from 1 (Green / Excellent) to 100 (Disaster / Terrible) representing their eco-impact.
+      2. keyFindings: An array of 3 specific bullet points highlighting harmful habits or positive lifestyle choices based on their exact input.
+      3. alternatives: An array of 3 personalized recommendations with { title, desc } to improve their habits.
+
+      You MUST format your response as a valid RAW JSON object matching this exact schema:
+      {
+        "footprintScore": <number>,
+        "keyFindings": ["finding 1", "finding 2", "finding 3"],
+        "alternatives": [
+          {"title": "Alternative 1", "desc": "description..."},
+          {"title": "Alternative 2", "desc": "description..."},
+          {"title": "Alternative 3", "desc": "description..."}
+        ]
+      }
+    `;
+
+    const result = await model.generateContent(prompt);
+    let textResponse = result.response.text();
+    textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+
+    let genData;
+    try {
+      genData = JSON.parse(textResponse);
+    } catch (parseErr) {
+      console.error('Failed to parse Gemini response:', textResponse);
+      return res.status(500).json({ error: 'Failed to process AI response' });
+    }
+
+    const analysisDetails = {
+      keyFindings: genData.keyFindings,
+      alternatives: genData.alternatives,
     };
 
-    const newEntry = await Entry.create({
+    const newLog = await BehaviorLog.create({
       userId,
-      productName,
-      description,
-      supplierInfo: supplierInfo || "",
-      footprintScore: mockFootprintScore,
-      analysisDetails: mockAnalysisDetails,
+      electricityUsage: Number(electricityUsage),
+      waterUsage: Number(waterUsage),
+      wasteGeneration: Number(wasteGeneration),
+      travelDistance: Number(travelDistance),
+      travelMode,
+      dietType,
+      footprintScore: genData.footprintScore,
+      analysisDetails: analysisDetails,
     });
+
+    // Gamification Logic: Award user +10 points for analyzing
+    const user = await User.findById(userId);
+    if(user) {
+      user.points += 10;
+      user.level = calculateLevel(user.points);
+      await user.save();
+    }
 
     res.status(201).json({
       success: true,
-      data: newEntry,
+      data: newLog,
+      pointsEarned: 10,
+      newTotalPoints: user ? user.points : 0
     });
   } catch (error) {
     console.error(error);
@@ -43,9 +100,9 @@ exports.analyzeProduct = async (req, res) => {
   }
 };
 
-// @desc    Get all analysis history for a user
-// @route   GET /api/history/:userId
-// @access  Public (for now)
+// @desc    Get all behavior histories for a user
+// @route   GET /api/history
+// @access  Private
 exports.getHistory = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -54,7 +111,7 @@ exports.getHistory = async (req, res) => {
       return res.status(400).json({ error: 'Please provide a userId' });
     }
 
-    const entries = await Entry.find({ userId, isHiddenForUser: false }).sort({ createdAt: -1 });
+    const entries = await BehaviorLog.find({ userId, isHiddenForUser: false }).sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -72,7 +129,7 @@ exports.getHistory = async (req, res) => {
 // @access  Private
 exports.deleteMyEntry = async (req, res) => {
   try {
-    const entry = await Entry.findOneAndUpdate(
+    const entry = await BehaviorLog.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
       { isHiddenForUser: true },
       { returnDocument: 'after' }
@@ -94,7 +151,7 @@ exports.deleteMyEntry = async (req, res) => {
 // @access  Private
 exports.clearMyHistory = async (req, res) => {
   try {
-    await Entry.updateMany(
+    await BehaviorLog.updateMany(
       { userId: req.user._id, isHiddenForUser: false },
       { isHiddenForUser: true }
     );

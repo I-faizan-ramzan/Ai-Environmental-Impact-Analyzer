@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const Entry = require('../models/Entry');
+const BehaviorLog = require('../models/BehaviorLog');
 
 // @desc    Create an admin user
 // @route   POST /api/admin/create-admin
@@ -61,7 +61,7 @@ exports.getUsers = async (req, res) => {
 // @access  Private/Admin
 exports.getAllHistory = async (req, res) => {
   try {
-    const entries = await Entry.find({}).populate('userId', 'name email').sort({ createdAt: -1 });
+    const entries = await BehaviorLog.find({}).populate('userId', 'name email').sort({ createdAt: -1 });
     res.json(entries);
   } catch (error) {
     console.error(error);
@@ -75,7 +75,7 @@ exports.getAllHistory = async (req, res) => {
 exports.getUserHistory = async (req, res) => {
   try {
     const { id } = req.params;
-    const entries = await Entry.find({ userId: id }).sort({ createdAt: -1 });
+    const entries = await BehaviorLog.find({ userId: id }).sort({ createdAt: -1 });
     if (!entries) {
       return res.status(404).json({ error: 'No history found' });
     }
@@ -91,7 +91,7 @@ exports.getUserHistory = async (req, res) => {
 // @access  Private/Admin
 exports.deleteHistory = async (req, res) => {
   try {
-    const entry = await Entry.findByIdAndDelete(req.params.id);
+    const entry = await BehaviorLog.findByIdAndDelete(req.params.id);
 
     if (!entry) {
       return res.status(404).json({ error: 'Entry not found' });
@@ -101,5 +101,29 @@ exports.deleteHistory = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Server Error deleting history' });
+  }
+};
+
+// @desc    Delete a user and their analysis history (Cascade)
+// @route   DELETE /api/admin/users/:id
+// @access  Private/Admin
+exports.deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // 1. Delete all history entries for this user
+    await BehaviorLog.deleteMany({ userId: userId });
+
+    // 2. Delete the user
+    const user = await User.findByIdAndDelete(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ message: 'User and linked history deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server Error deleting user' });
   }
 };

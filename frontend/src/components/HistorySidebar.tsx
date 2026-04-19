@@ -124,17 +124,13 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
                       </button>
                       
                       <h3 className="font-semibold text-lg text-gray-200 mb-1 pe-10 truncate">
-                        {item.productName}
+                        Behavior Log
                       </h3>
                       
-                      <div className="flex items-center gap-4 text-sm text-gray-400 mb-3">
-                        <span className="flex items-center gap-1.5">
+                      <div className="flex flex-wrap items-center gap-2 text-sm text-gray-400 mb-3">
+                        <span className="flex items-center gap-1.5 bg-white/5 px-2 py-1 rounded">
                           <CalendarDays className="w-4 h-4" />
                           {new Date(item.createdAt).toLocaleDateString()}
-                        </span>
-                        <span className="flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-green-400/10 text-green-400 border border-green-400/20">
-                          <Activity className="w-3 h-3" />
-                          Verified
                         </span>
                       </div>
   

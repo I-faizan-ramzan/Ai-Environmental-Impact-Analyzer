@@ -1,19 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnalysisForm } from '@/components/AnalysisForm';
 import { ScoreDisplay } from '@/components/ScoreDisplay';
 import { Recommendations } from '@/components/Recommendations';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Award } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import axios from 'axios';
 
 export default function AnalyzePage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [result, setResult] = useState<null | { score: number }>(null);
+  const [result, setResult] = useState<any>(null);
   const { user, token, isLoading } = useAuth();
   const router = useRouter();
 
@@ -23,26 +22,30 @@ export default function AnalyzePage() {
     }
   }, [user, isLoading, router]);
 
-  const handleAnalyze = async (formData: { productName: string, description: string, manufacturing: string, supplyChain: string }) => {
+  const handleAnalyze = async (formData: any) => {
     setIsAnalyzing(true);
     setResult(null);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/analyze', {
-        productName: formData.productName,
-        description: formData.description,
-        supplierInfo: formData.supplyChain + (formData.manufacturing ? ' | ' + formData.manufacturing : ''),
+      const response = await axios.post('http://localhost:5000/api/analyze', formData, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       if (response.data && response.data.success) {
-        setResult({ score: response.data.data.footprintScore });
+        setResult({
+          score: response.data.data.footprintScore,
+          keyFindings: response.data.data.analysisDetails?.keyFindings || [],
+          alternatives: response.data.data.analysisDetails?.alternatives || [],
+          pointsEarned: response.data.pointsEarned,
+          newTotalPoints: response.data.newTotalPoints
+        });
       } else {
         console.error('API Error:', response.data.error);
-        setResult({ score: 50 }); // Fallback score
+        setResult({ score: 50, keyFindings: [], alternatives: [] });
       }
     } catch (error: any) {
-      console.error('Failed to analyze product:', error.response?.data || error.message);
-      setResult({ score: 50 }); // Fallback score
+      console.error('Failed to analyze behavior:', error.response?.data || error.message);
+      setResult({ score: 50, keyFindings: [], alternatives: [] });
     } finally {
       setIsAnalyzing(false);
     }
@@ -70,9 +73,9 @@ export default function AnalyzePage() {
             className="w-full"
           >
             <div className="text-center mb-10">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">Start Analysis</h1>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">Daily Behavior Analysis</h1>
               <p className="text-gray-400 max-w-2xl mx-auto">
-                Submit your product data for a comprehensive, AI-driven environmental footprint evaluation stored securely on-chain.
+                Submit your daily habits to get an AI-powered evaluation of your personal environmental impact and level up your Eco-Score.
               </p>
             </div>
             <AnalysisForm onSubmit={handleAnalyze} />
@@ -92,8 +95,8 @@ export default function AnalyzePage() {
               <Loader2 className="w-16 h-16 text-green-400 animate-spin relative z-10" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-white mb-2">Analyzing Product Data...</h3>
-              <p className="text-gray-400">Processing text, manufacturing info, and supply chain metrics through our decentralized AI models.</p>
+              <h3 className="text-2xl font-bold text-white mb-2">Analyzing Your Habits...</h3>
+              <p className="text-gray-400">Processing electricity, water, and diet metrics through our specialized AI coach.</p>
             </div>
           </motion.div>
         )}
@@ -106,8 +109,8 @@ export default function AnalyzePage() {
             className="w-full flex flex-col items-center max-w-5xl mx-auto"
           >
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Analysis Complete</h2>
-              <p className="text-gray-400">Your results have been verified and securely logged.</p>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Personal Analysis Complete</h2>
+              <p className="text-gray-400">Here is your tailored environmental report.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full items-start">
@@ -115,44 +118,45 @@ export default function AnalyzePage() {
               
               <div className="flex flex-col gap-4">
                 <div className="glass-card p-6">
-                  <h4 className="font-semibold text-lg mb-2">Key Findings</h4>
+                  <h4 className="font-semibold text-lg mb-2">Key AI Findings</h4>
                   <ul className="space-y-3 text-sm text-gray-300">
-                    <li className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 mt-2 shrink-0" />
-                      Materials used account for 45% of total impact.
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 mt-2 shrink-0" />
-                      Transportation emissions are higher than industry average.
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2 shrink-0" />
-                      Energy efficiency in manufacturing is optimal.
-                    </li>
+                    {result.keyFindings && result.keyFindings.length > 0 ? (
+                      result.keyFindings.map((finding: string, idx: number) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${idx % 3 === 0 ? 'bg-green-400' : idx % 3 === 1 ? 'bg-yellow-400' : 'bg-cyan-400'}`} />
+                          {finding}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="flex items-start gap-2 text-gray-500">Wait, no findings were returned.</li>
+                    )}
                   </ul>
                 </div>
 
-                <div className="glass-card p-6 border-green-400/30 relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-transparent translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500" />
-                  <h4 className="font-semibold text-lg mb-2 relative z-10">Blockchain Verification</h4>
-                  <p className="text-xs text-gray-400 font-mono break-all leading-relaxed relative z-10">
-                    Tx Hash: 0x8f2a...c91b<br/>
-                    Stored on IPFS: bafybeig...xyz
-                  </p>
-                  <button className="text-green-400 text-sm font-medium mt-4 hover:underline relative z-10">
-                    View on Block Explorer
-                  </button>
-                </div>
+                {result.pointsEarned && (
+                  <div className="glass-card p-6 border-yellow-400/50 bg-yellow-400/5 relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 to-transparent translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500" />
+                    <div className="flex items-center gap-3 relative z-10">
+                      <Award className="w-8 h-8 text-yellow-500" />
+                      <div>
+                        <h4 className="font-bold text-lg text-yellow-500">+{result.pointsEarned} Eco Points Earned!</h4>
+                        <p className="text-sm text-yellow-500/80 font-medium">
+                          Total Points: {result.newTotalPoints}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            <Recommendations />
+            <Recommendations alternatives={result.alternatives} />
 
             <button
               onClick={() => setResult(null)}
               className="mt-12 px-8 py-4 bg-white/5 border border-white/10 rounded-full font-medium hover:bg-white/10 transition-colors"
             >
-              Analyze Another Product
+              Analyze Another Timeline
             </button>
           </motion.div>
         )}

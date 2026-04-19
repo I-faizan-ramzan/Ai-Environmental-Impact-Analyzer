@@ -6,7 +6,7 @@ dotenv.config();
 
 // Models
 const User = require('./models/User');
-const Entry = require('./models/Entry');
+const BehaviorLog = require('./models/BehaviorLog');
 
 const clearDatabase = async () => {
     try {
@@ -14,9 +14,9 @@ const clearDatabase = async () => {
         await mongoose.connect(process.env.MONGO_URI);
         console.log('MongoDB Connected');
 
-        console.log('Dropping User and Entry collections...');
+        console.log('Dropping User and BehaviorLog collections...');
         await User.deleteMany();
-        await Entry.deleteMany();
+        await BehaviorLog.deleteMany();
         console.log('Collections cleared successfully!');
 
         process.exit();

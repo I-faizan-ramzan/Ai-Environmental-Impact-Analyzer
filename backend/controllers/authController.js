@@ -89,3 +89,19 @@ exports.getMe = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+// @desc    Get Gamification Leaderboard
+// @route   GET /api/auth/leaderboard
+// @access  Public
+exports.getLeaderboard = async (req, res) => {
+  try {
+    const users = await User.find({})
+      .select('name points level badges')
+      .sort({ points: -1 })
+      .limit(10);
+    res.json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error retrieving leaderboard' });
+  }
+};

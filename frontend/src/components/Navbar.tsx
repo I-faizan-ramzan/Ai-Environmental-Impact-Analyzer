@@ -55,6 +55,8 @@ export function Navbar({ onOpenHistory }: { onOpenHistory: () => void }) {
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-300">
             <Link href="/" className="hover:text-white transition-colors">Home</Link>
             <Link href="/analyze" className="hover:text-white transition-colors">Analyze</Link>
+            <Link href="/learning" className="hover:text-white transition-colors">Learning</Link>
+            <Link href="/leaderboard" className="hover:text-white transition-colors">Leaderboard</Link>
             {user?.role === 'admin' && (
               <Link href="/admin" className="hover:text-white transition-colors text-purple-400">Admin</Link>
             )}
@@ -102,6 +104,8 @@ export function Navbar({ onOpenHistory }: { onOpenHistory: () => void }) {
         <div className="md:hidden absolute top-full left-0 right-0 bg-zinc-900 border-b border-white/10 shadow-lg px-4 py-4 flex flex-col gap-4">
           <Link href="/" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-md">Home</Link>
           <Link href="/analyze" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-md">Analyze</Link>
+          <Link href="/learning" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-md">Learning</Link>
+          <Link href="/leaderboard" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-md">Leaderboard</Link>
           {user?.role === 'admin' && (
             <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-base font-medium text-purple-400 hover:text-purple-300 hover:bg-white/5 rounded-md">Admin Dashboard</Link>
           )}

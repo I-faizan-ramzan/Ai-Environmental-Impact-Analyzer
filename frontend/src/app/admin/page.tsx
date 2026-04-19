@@ -18,8 +18,12 @@ interface FullUser {
 
 interface HistoryEntry {
   _id: string;
-  productName: string;
-  description: string;
+  travelMode: string;
+  dietType: string;
+  electricityUsage: number;
+  waterUsage: number;
+  wasteGeneration: number;
+  travelDistance: number;
   footprintScore: number;
   isHiddenForUser: boolean;
   createdAt: string;
@@ -35,6 +39,7 @@ export default function AdminPage() {
   const [loadingData, setLoadingData] = useState(true);
 
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
   // New Admin Form State
   const [newAdminName, setNewAdminName] = useState('');
@@ -104,9 +109,27 @@ export default function AdminPage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       setHistories(prev => prev.filter(h => h._id !== itemToDelete));
+      setItemToDelete(null);
     } catch (err) {
       console.error('Failed to delete history', err);
       alert('Failed to delete history record permanently.');
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete || !token) return;
+
+    try {
+      await axios.delete(`http://localhost:5000/api/admin/users/${userToDelete}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsers(prev => prev.filter(u => u._id !== userToDelete));
+      // Optionally also filter out their histories from the local state
+      setHistories(prev => prev.filter(h => h.userId?._id !== userToDelete));
+      setUserToDelete(null);
+    } catch (err: any) {
+      console.error('Failed to delete user', err);
+      alert(err.response?.data?.error || 'Failed to delete user account.');
     }
   };
 
@@ -183,13 +206,24 @@ export default function AdminPage() {
                       <p className="text-sm text-gray-400">{new Date(u.createdAt).toLocaleDateString()}</p>
                     </div>
                     <p className="text-sm text-gray-400">{u.email}</p>
-                    <div className="mt-2 text-xs flex gap-2">
-                       <span className={`px-2 py-1 rounded border border-gray-600 ${u.role === 'admin' ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-700 text-gray-300'}`}>
-                         {u.role.toUpperCase()}
-                       </span>
-                       <span className="px-2 py-1 rounded border border-gray-600 bg-gray-700 text-gray-300">
-                         {u.authProvider}
-                       </span>
+                    <div className="mt-2 text-xs flex items-center justify-between">
+                       <div className="flex gap-2">
+                         <span className={`px-2 py-1 rounded border border-gray-600 ${u.role === 'admin' ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-700 text-gray-300'}`}>
+                           {u.role.toUpperCase()}
+                         </span>
+                         <span className="px-2 py-1 rounded border border-gray-600 bg-gray-700 text-gray-300">
+                           {u.authProvider}
+                         </span>
+                       </div>
+                       {u._id !== user?._id && (
+                         <button 
+                           onClick={() => setUserToDelete(u._id)}
+                           className="text-red-400 hover:text-red-300 transition-colors p-1 cursor-pointer"
+                           title="Permanently Delete User"
+                         >
+                           <Trash2 className="w-4 h-4" />
+                         </button>
+                       )}
                     </div>
                   </div>
                 </div>
@@ -211,7 +245,7 @@ export default function AdminPage() {
             <table className="min-w-full divide-y divide-gray-700">
               <thead className="bg-gray-800">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Product</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Behavior & Diet</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Score</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">User</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
@@ -223,12 +257,14 @@ export default function AdminPage() {
                   <tr key={h._id} className="hover:bg-gray-800 transition">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-white flex items-center gap-2">
-                        {h.productName}
+                        {h.travelMode} & {h.dietType}
                         {h.isHiddenForUser && (
                           <span className="px-2 py-0.5 text-[10px] uppercase font-bold bg-gray-700 text-gray-300 rounded border border-gray-500">Hidden</span>
                         )}
                       </div>
-                      <div className="text-sm text-gray-400 truncate max-w-[200px]">{h.description}</div>
+                      <div className="text-sm text-gray-400 truncate max-w-[250px]">
+                        {h.electricityUsage}kWh energy, {h.waterUsage}L water
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${h.footprintScore < 30 ? 'bg-green-100 text-green-800' : h.footprintScore < 70 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
@@ -265,6 +301,15 @@ export default function AdminPage() {
         onConfirm={handleDeleteHistory}
         title="Permanently Delete Record?"
         message="You are about to execute a hard delete. This will permanently erase this analysis record from the primary database entirely."
+        isHardDelete={true}
+      />
+
+      <ConfirmationModal
+        isOpen={userToDelete !== null}
+        onClose={() => setUserToDelete(null)}
+        onConfirm={handleDeleteUser}
+        title="Permanently Delete User Account?"
+        message="DANGER: You are about to permanently delete this user account AND all of their search history. This action cannot be undone."
         isHardDelete={true}
       />
     </div>
