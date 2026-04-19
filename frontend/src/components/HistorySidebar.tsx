@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, History as HistoryIcon, Activity, CalendarDays, ExternalLink, RefreshCw, Trash2 } from 'lucide-react';
+import { X, History as HistoryIcon, CalendarDays, RefreshCw, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import axios from 'axios';
+import api from '@/lib/api';
 import { ConfirmationModal } from './ConfirmationModal';
 
 interface HistorySidebarProps {
@@ -32,7 +32,7 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
   useEffect(() => {
     if (isOpen && token) {
       setLoading(true);
-      axios.get('http://localhost:5000/api/history', {
+      api.get('/api/history', {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then(res => {
@@ -47,7 +47,7 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
     if (!itemToDelete || !token) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/history/${itemToDelete}`, {
+      await api.delete(`/api/history/${itemToDelete}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       // Remove from UI without reloading

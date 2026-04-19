@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Leaf, Wallet, History } from 'lucide-react';
+import { Leaf, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
-import { Menu, X } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export function Navbar({ onOpenHistory }: { onOpenHistory: () => void }) {

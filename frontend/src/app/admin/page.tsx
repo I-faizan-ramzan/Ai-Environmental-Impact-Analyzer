@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
-import { Loader2, Users, FileText, Search, Trash2 } from 'lucide-react';
+import api from '@/lib/api';
+import { Loader2, Users, Search, Trash2 } from 'lucide-react';
 import { ConfirmationModal } from '@/components/ConfirmationModal';
 
 interface FullUser {
@@ -58,15 +58,16 @@ export default function AdminPage() {
         fetchAdminData();
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isLoading, router, token]);
 
   const fetchAdminData = async () => {
     try {
       const [usersRes, historiesRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/admin/users', {
+        api.get('/api/admin/users', {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get('http://localhost:5000/api/admin/history', {
+        api.get('/api/admin/history', {
           headers: { Authorization: `Bearer ${token}` }
         }),
       ]);
@@ -84,7 +85,7 @@ export default function AdminPage() {
     setAdminError('');
     setAdminSuccess('');
     try {
-      await axios.post('http://localhost:5000/api/admin/create-admin', {
+      await api.post('/api/admin/create-admin', {
         name: newAdminName,
         email: newAdminEmail,
         password: newAdminPassword,
@@ -96,8 +97,9 @@ export default function AdminPage() {
       setNewAdminEmail('');
       setNewAdminPassword('');
       fetchAdminData(); // refresh table
-    } catch (err: any) {
-      setAdminError(err.response?.data?.error || 'Failed to create admin');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      setAdminError(error.response?.data?.error || 'Failed to create admin');
     }
   };
 
@@ -105,7 +107,7 @@ export default function AdminPage() {
     if (!itemToDelete || !token) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/admin/history/${itemToDelete}`, {
+      await api.delete(`/api/admin/history/${itemToDelete}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setHistories(prev => prev.filter(h => h._id !== itemToDelete));
@@ -120,16 +122,17 @@ export default function AdminPage() {
     if (!userToDelete || !token) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/admin/users/${userToDelete}`, {
+      await api.delete(`/api/admin/users/${userToDelete}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(prev => prev.filter(u => u._id !== userToDelete));
       // Optionally also filter out their histories from the local state
       setHistories(prev => prev.filter(h => h.userId?._id !== userToDelete));
       setUserToDelete(null);
-    } catch (err: any) {
-      console.error('Failed to delete user', err);
-      alert(err.response?.data?.error || 'Failed to delete user account.');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      console.error('Failed to delete user', error);
+      alert(error.response?.data?.error || 'Failed to delete user account.');
     }
   };
 

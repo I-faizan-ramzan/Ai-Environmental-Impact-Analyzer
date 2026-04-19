@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowRight, Leaf, Droplets, Wind } from 'lucide-react';
+import { ArrowRight, Leaf } from 'lucide-react';
 
 interface Alternative {
   title: string;

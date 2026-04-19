@@ -8,10 +8,11 @@ import { Recommendations } from '@/components/Recommendations';
 import { Loader2, Award } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import api from '@/lib/api';
 
 export default function AnalyzePage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [result, setResult] = useState<any>(null);
   const { user, token, isLoading } = useAuth();
   const router = useRouter();
@@ -22,12 +23,13 @@ export default function AnalyzePage() {
     }
   }, [user, isLoading, router]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAnalyze = async (formData: any) => {
     setIsAnalyzing(true);
     setResult(null);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/analyze', formData, {
+      const response = await api.post('/api/analyze', formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -43,7 +45,8 @@ export default function AnalyzePage() {
         console.error('API Error:', response.data.error);
         setResult({ score: 50, keyFindings: [], alternatives: [] });
       }
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } }, message?: string };
       console.error('Failed to analyze behavior:', error.response?.data || error.message);
       setResult({ score: 50, keyFindings: [], alternatives: [] });
     } finally {

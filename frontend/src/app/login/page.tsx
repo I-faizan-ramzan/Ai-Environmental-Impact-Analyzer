@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import axios from 'axios';
+import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -17,7 +17,7 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       // Connect to locally running express server
-      const res = await axios.post('http://localhost:5000/api/auth/login', {
+      const res = await api.post('/api/auth/login', {
         email,
         password,
       });
@@ -27,8 +27,9 @@ export default function LoginPage() {
       // If admin, send to admin route, else to analyze route
       if(userData.role === 'admin') router.push('/admin');
       else router.push('/analyze');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Login failed');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Login failed');
     }
   };
 

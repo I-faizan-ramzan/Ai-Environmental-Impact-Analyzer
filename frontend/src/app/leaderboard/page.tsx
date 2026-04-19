@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Medal, Award, Loader2 } from 'lucide-react';
-import axios from 'axios';
+import api from '@/lib/api';
 
 interface LeaderboardUser {
   _id: string;
@@ -17,7 +17,7 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/auth/leaderboard')
+    api.get('/api/auth/leaderboard')
       .then(res => {
         setUsers(res.data);
       })

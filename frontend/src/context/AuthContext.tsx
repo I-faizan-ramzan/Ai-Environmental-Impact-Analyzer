@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
-import axios from 'axios';
+import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 
 interface User {
@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
       // Set default auth header for axios
-      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
     }
     setIsLoading(false);
   }, []);
@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setToken(tokenData);
     Cookies.set('token', tokenData, { expires: 30 }); // 30 days
     Cookies.set('user', JSON.stringify(userData), { expires: 30 });
-    axios.defaults.headers.common['Authorization'] = `Bearer ${tokenData}`;
+    api.defaults.headers.common['Authorization'] = `Bearer ${tokenData}`;
   };
 
   const logout = () => {
@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setToken(null);
     Cookies.remove('token');
     Cookies.remove('user');
-    delete axios.defaults.headers.common['Authorization'];
+    delete api.defaults.headers.common['Authorization'];
     router.push('/login');
   };
 
