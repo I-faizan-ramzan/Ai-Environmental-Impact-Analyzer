@@ -15,7 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "AI Environmental Impact Analyzer",
-  description: "Web3 application to analyze the environmental impact of consumer goods.",
+  description:
+    "Web3 application to analyze the environmental impact of consumer goods.",
 };
 
 export default function RootLayout({
@@ -26,6 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark scroll-smooth">
       <body
+        suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <MainLayoutClient>{children}</MainLayoutClient>

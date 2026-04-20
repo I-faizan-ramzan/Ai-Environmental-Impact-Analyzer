@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -10,9 +11,24 @@ interface ConfirmationModalProps {
   title: string;
   message: string;
   isHardDelete?: boolean;
+  confirmText?: string;
+  confirmIcon?: any;
+  variant?: 'danger' | 'primary';
 }
 
-export function ConfirmationModal({ isOpen, onClose, onConfirm, title, message, isHardDelete = false }: ConfirmationModalProps) {
+export function ConfirmationModal({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  title, 
+  message, 
+  isHardDelete = false,
+  confirmText = "Confirm Delete",
+  confirmIcon: Icon = Trash2,
+  variant = 'danger'
+}: ConfirmationModalProps) {
+  const isDanger = variant === 'danger';
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -30,13 +46,16 @@ export function ConfirmationModal({ isOpen, onClose, onConfirm, title, message, 
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
           >
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-500" />
+            <div className={cn(
+              "absolute top-0 left-0 w-full h-1",
+              isDanger ? "bg-gradient-to-r from-red-500 to-orange-500" : "bg-gradient-to-r from-green-500 to-emerald-500"
+            )} />
             
             <div className="p-6">
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-red-500/10 rounded-full">
-                    <AlertTriangle className="w-6 h-6 text-red-500" />
+                  <div className={cn("p-3 rounded-full", isDanger ? "bg-red-500/10" : "bg-green-500/10")}>
+                    <AlertTriangle className={cn("w-6 h-6", isDanger ? "text-red-500" : "text-green-500")} />
                   </div>
                   <h3 className="text-xl font-bold text-white">{title}</h3>
                 </div>
@@ -69,10 +88,13 @@ export function ConfirmationModal({ isOpen, onClose, onConfirm, title, message, 
                     onConfirm();
                     onClose();
                   }}
-                  className="flex-1 py-3 px-4 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 group"
+                  className={cn(
+                    "flex-1 py-3 px-4 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 group",
+                    isDanger ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
+                  )}
                 >
-                  <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                  Confirm Delete
+                  <Icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  {confirmText}
                 </button>
               </div>
             </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Target, Server, ShieldCheck, Leaf, PackageOpen } from 'lucide-react';
+import { Target, Server, Leaf, Database, Cpu, Layout, Code2 } from 'lucide-react';
 
 export default function AboutPage() {
   const teamMembers = [
@@ -11,10 +11,10 @@ export default function AboutPage() {
   ];
 
   const technologies = [
-    { name: "Next.js", icon: <Server className="w-5 h-5 text-gray-300" />, desc: "React Framework" },
-    { name: "Tailwind CSS", icon: <PackageOpen className="w-5 h-5 text-cyan-400" />, desc: "Utility-first Styling" },
-    { name: "Framer Motion", icon: <Target className="w-5 h-5 text-purple-400" />, desc: "Smooth Animations" },
-    { name: "Web3/Blockchain", icon: <ShieldCheck className="w-5 h-5 text-green-400" />, desc: "Decentralized Storage" },
+    { name: "Next.js", icon: <Layout className="w-5 h-5 text-blue-400" />, desc: "Frontend Framework" },
+    { name: "Node.js & Express", icon: <Server className="w-5 h-5 text-green-400" />, desc: "Backend API Engine" },
+    { name: "MongoDB", icon: <Database className="w-5 h-5 text-emerald-500" />, desc: "Scalable Data Storage" },
+    { name: "Google Gemini", icon: <Cpu className="w-5 h-5 text-purple-400" />, desc: "Generative AI Analysis" },
   ];
 
   return (
@@ -36,7 +36,7 @@ export default function AboutPage() {
           Empowering <span className="text-gradient">Sustainable</span> Choices
         </h1>
         <p className="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">
-          The AI Environmental Impact Analyzer is a decentralized Web3 application designed to bring transparency and trust back to consumer goods. By calculating and permanently logging environmental footprints on-chain, we help consumers make eco-friendly decisions.
+          The AI Environmental Impact Analyzer is a sophisticated platform designed to bring transparency and scientific accuracy back to lifestyle choices. By leveraging advanced AI models to calculate footprints and logging them for personalized tracking, we help you make informed, eco-friendly decisions.
         </p>
       </motion.div>
 
@@ -71,13 +71,13 @@ export default function AboutPage() {
         transition={{ delay: 0.3 }}
         className="mb-20 glass-card p-8 md:p-12 border-l-4 border-l-green-400"
       >
-        <h2 className="text-2xl font-bold mb-6">Why Decentralization?</h2>
+        <h2 className="text-2xl font-bold mb-6">How AI Drives Sustainability</h2>
         <div className="prose prose-invert max-w-none text-gray-400 leading-relaxed space-y-4">
           <p>
-            Traditional environmental scores are often kept in centralized databases, prone to manipulation or &quot;greenwashing.&quot; By running our AI models through decentralized networks (like Fetch.ai) and storing the resulting scores directly on a blockchain network (Ethereum/Polygon), we guarantee <strong className="text-gray-200">immutability and transparency</strong>. 
+            Traditional environmental assessments are often manual, slow, and prone to human error. By utilizing <strong className="text-gray-200">Google Gemini Pro</strong>, we can process complex lifestyle data in milliseconds to provide accurate, data-backed environmental scores.
           </p>
           <p>
-            When a product is analyzed, it cannot be secretly altered later. This allows consumers to trust the data and even earn tokenized Eco-Rewards for consistently choosing low-impact products.
+            Every calculation is securely tracked in our platform, allowing users to visualize their long-term progress, earn Eco-Points for positive behavior, and benchmark their impact against a global community committed to change.
           </p>
         </div>
       </motion.div>

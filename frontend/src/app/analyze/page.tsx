@@ -34,6 +34,7 @@ export default function AnalyzePage() {
       });
 
       if (response.data && response.data.success) {
+        window.dispatchEvent(new Event('history-updated'));
         setResult({
           score: response.data.data.footprintScore,
           keyFindings: response.data.data.analysisDetails?.keyFindings || [],
@@ -47,7 +48,7 @@ export default function AnalyzePage() {
       }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string } }, message?: string };
-      console.error('Failed to analyze behavior:', error.response?.data || error.message);
+      console.error('Failed to analyze behavior:', error.response?.data?.error || error.message);
       setResult({ score: 50, keyFindings: [], alternatives: [] });
     } finally {
       setIsAnalyzing(false);

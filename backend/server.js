@@ -1,13 +1,12 @@
+const dotenv = require('dotenv');
+dotenv.config();
+
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const apiRoutes = require('./routes/api');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-
-// Load env vars
-dotenv.config();
 
 // Connect to database
 connectDB();
@@ -15,8 +14,15 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*', // For initial development, keeping it open. Recommend updating to specific Vercel URL later.
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json()); // Parses incoming JSON requests
+
+// Health check for deployment platforms
+app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
 // Routes
 app.use('/api/auth', authRoutes);

@@ -3,7 +3,13 @@ const User = require('../models/User');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const apiKey = process.env.GEMINI_API_KEY || '';
+if (!apiKey) {
+  console.warn('WARNING: GEMINI_API_KEY is not defined in .env! AI analysis will fail.');
+} else {
+  console.log('Gemini API Key detected. Initializing Generative AI...');
+}
+const genAI = new GoogleGenerativeAI(apiKey);
 
 // Helper to calculate level based on points
 const calculateLevel = (points) => {
@@ -23,7 +29,7 @@ exports.analyzeBehavior = async (req, res) => {
     }
 
     // Connect to Google Gemini
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const prompt = `
       You are an expert Environmental Impact Analyst and Personal Climate Coach.
@@ -53,7 +59,14 @@ exports.analyzeBehavior = async (req, res) => {
 
     const result = await model.generateContent(prompt);
     let textResponse = result.response.text();
-    textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    // Aggressive JSON Trapping to ignore Gemini Markdown wrapper
+    const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      textResponse = jsonMatch[0];
+    } else {
+      textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+    }
 
     let genData;
     try {
@@ -96,7 +109,7 @@ exports.analyzeBehavior = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Server Error during analysis' });
+    res.status(500).json({ error: error.message || 'Server Error during analysis' });
   }
 };
 
@@ -112,6 +125,7 @@ exports.getHistory = async (req, res) => {
     }
 
     const entries = await BehaviorLog.find({ userId, isHiddenForUser: false }).sort({ createdAt: -1 });
+    console.log(`History requested: Found ${entries.length} entries for user ${userId}`);
 
     res.status(200).json({
       success: true,

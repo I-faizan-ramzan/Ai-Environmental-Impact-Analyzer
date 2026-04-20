@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { Loader2, Users, Search, Trash2 } from 'lucide-react';
+import { Loader2, Users, Search, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import { ConfirmationModal } from '@/components/ConfirmationModal';
 
 interface FullUser {
@@ -30,13 +30,35 @@ interface HistoryEntry {
   userId: { _id: string; name: string; email: string };
 }
 
+interface PendingArticle {
+  _id: string;
+  title: string;
+  content: string;
+  authorName: string;
+  status: string;
+  isUpdateRequested?: boolean;
+  isDeletionRequested?: boolean;
+  updateRequest?: { title: string, content: string };
+  createdAt: string;
+}
+
+interface ApprovedArticle {
+  _id: string;
+  title: string;
+  authorName: string;
+  createdAt: string;
+}
+
 export default function AdminPage() {
   const { user, token, isLoading } = useAuth();
   const router = useRouter();
   
   const [users, setUsers] = useState<FullUser[]>([]);
   const [histories, setHistories] = useState<HistoryEntry[]>([]);
+  const [pendingArticles, setPendingArticles] = useState<PendingArticle[]>([]);
+  const [approvedArticles, setApprovedArticles] = useState<ApprovedArticle[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [activeTab, setActiveTab] = useState<'users' | 'articles' | 'manage_articles'>('users');
 
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
@@ -63,16 +85,16 @@ export default function AdminPage() {
 
   const fetchAdminData = async () => {
     try {
-      const [usersRes, historiesRes] = await Promise.all([
-        api.get('/api/admin/users', {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        api.get('/api/admin/history', {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
+      const [usersRes, historiesRes, pendingRes, approvedRes] = await Promise.all([
+        api.get('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } }),
+        api.get('/api/admin/history', { headers: { Authorization: `Bearer ${token}` } }),
+        api.get('/api/admin/articles/pending', { headers: { Authorization: `Bearer ${token}` } }),
+        api.get('/api/learning/articles', { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       setUsers(usersRes.data);
       setHistories(historiesRes.data);
+      setPendingArticles(pendingRes.data.data);
+      setApprovedArticles(approvedRes.data.data);
     } catch (error) {
       console.error('Failed to fetch admin data', error);
     } finally {
@@ -136,6 +158,32 @@ export default function AdminPage() {
     }
   };
 
+  const handleReviewArticle = async (id: string, status: 'approved' | 'rejected', type: 'submission' | 'update' | 'deletion') => {
+    try {
+      await api.put(`/api/admin/articles/${id}/review`, { status, type }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPendingArticles(prev => prev.filter(article => article._id !== id));
+      if (status === 'approved') fetchAdminData(); // Refresh list if content changed
+    } catch (error) {
+      console.error('Failed to review article', error);
+      alert('Failed to update article status.');
+    }
+  };
+
+  const handleDeleteGlobalArticle = async (id: string) => {
+    if (!confirm("Are you sure you want to permanently delete this article? This is irreversible.")) return;
+    try {
+      await api.delete(`/api/admin/articles/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setApprovedArticles(prev => prev.filter(a => a._id !== id));
+    } catch (error) {
+      console.error('Failed to delete article', error);
+      alert('Failed to delete article.');
+    }
+  };
+
   if (isLoading || loadingData) {
     return (
       <div className="min-h-screen flex justify-center items-center">
@@ -146,12 +194,36 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-8 border-b border-gray-700 pb-5">
-        <h1 className="text-4xl font-bold text-white tracking-tight">Admin Dashboard</h1>
-        <p className="mt-2 text-sm text-gray-400">View user activities and environmental footprint records.</p>
+      <div className="mb-8 border-b border-gray-700 pb-5 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-bold text-white tracking-tight">Admin Dashboard</h1>
+          <p className="mt-2 text-sm text-gray-400">Manage platform users, activities, and community content.</p>
+        </div>
+        <div className="flex bg-gray-900 rounded-lg p-1 border border-gray-700">
+          <button 
+            onClick={() => setActiveTab('users')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'users' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800/50'}`}
+          >
+            Users & History
+          </button>
+          <button 
+            onClick={() => setActiveTab('articles')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'articles' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800/50'}`}
+          >
+            Review Requests ({pendingArticles.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('manage_articles')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'manage_articles' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800/50'}`}
+          >
+            Manage Published
+          </button>
+        </div>
       </div>
 
-      <div className="mb-8 bg-gray-900 border border-gray-700 rounded-xl p-6 shadow-lg">
+      {activeTab === 'users' ? (
+        <>
+          <div className="mb-8 bg-gray-900 border border-gray-700 rounded-xl p-6 shadow-lg">
         <h3 className="text-lg font-medium text-white mb-4">Create New Admin</h3>
         <form onSubmit={handleCreateAdmin} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
           <input 
@@ -295,8 +367,122 @@ export default function AdminPage() {
               </tbody>
             </table>
           </div>
+            </div>
+          </div>
+        </>
+      ) : activeTab === 'articles' ? (
+        <div className="grid grid-cols-1 gap-8">
+          <div className="border border-gray-700 bg-gray-900 rounded-xl overflow-hidden shadow-lg">
+            <div className="px-6 py-5 border-b border-gray-700 bg-gray-800 flex items-center justify-between">
+              <h3 className="text-lg leading-6 font-medium text-white">Action Required: Requests</h3>
+            </div>
+            
+            {pendingArticles.length === 0 ? (
+              <div className="p-8 text-center text-gray-400">No pending articles or requests awaiting review.</div>
+            ) : (
+              <ul className="divide-y divide-gray-700">
+                {pendingArticles.map(article => {
+                  const isUpdate = article.isUpdateRequested;
+                  const isDeletion = article.isDeletionRequested;
+                  const isSubmission = !isUpdate && !isDeletion;
+                  const type = isUpdate ? 'update' : isDeletion ? 'deletion' : 'submission';
+
+                  return (
+                    <li key={article._id} className="p-6">
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                             <h4 className="text-xl font-bold text-white truncate">{article.title}</h4>
+                             <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${
+                               isUpdate ? 'bg-blue-500/20 text-blue-400' :
+                               isDeletion ? 'bg-orange-500/20 text-orange-400' :
+                               'bg-yellow-500/20 text-yellow-500'
+                             }`}>
+                               {type === 'submission' ? 'New Submission' : type === 'update' ? 'Update Request' : 'Deletion Request'}
+                             </span>
+                          </div>
+                          <div className="text-sm text-gray-400 mb-4">By {article.authorName} • {new Date(article.createdAt).toLocaleDateString()}</div>
+                          
+                          {isUpdate ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                               <div className="p-4 rounded-lg bg-gray-800/50 border border-gray-700">
+                                  <p className="text-[10px] uppercase font-bold text-gray-500 mb-2">Original Content</p>
+                                  <h5 className="font-bold mb-1">{article.title}</h5>
+                                  <p className="text-sm text-gray-400 line-clamp-4">{article.content}</p>
+                               </div>
+                               <div className="p-4 rounded-lg bg-blue-900/20 border border-blue-500/20">
+                                  <p className="text-[10px] uppercase font-bold text-blue-400 mb-2">Proposed Changes</p>
+                                  <h5 className="font-bold mb-1">{article.updateRequest?.title}</h5>
+                                  <p className="text-sm text-blue-200/70 whitespace-pre-wrap">{article.updateRequest?.content}</p>
+                               </div>
+                            </div>
+                          ) : (
+                            <div className="bg-gray-800 border border-gray-700 p-4 rounded-lg text-gray-300 text-sm whitespace-pre-wrap">
+                              {article.content}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-row md:flex-col gap-3 shrink-0">
+                          <button 
+                            onClick={() => handleReviewArticle(article._id, 'approved', type)}
+                            className="flex items-center gap-2 px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/40 hover:bg-green-500/30 rounded-lg transition-colors"
+                          >
+                            <CheckCircle className="w-4 h-4" /> {isDeletion ? 'Approve Delete' : 'Approve'}
+                          </button>
+                          <button 
+                            onClick={() => handleReviewArticle(article._id, 'rejected', type)}
+                            className="flex items-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30 rounded-lg transition-colors"
+                          >
+                            <XCircle className="w-4 h-4" /> Reject
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-8">
+           <div className="border border-gray-700 bg-gray-900 rounded-xl overflow-hidden shadow-lg">
+             <div className="px-6 py-5 border-b border-gray-700 bg-gray-800">
+                <h3 className="text-lg leading-6 font-medium text-white">Global Article Management</h3>
+                <p className="text-xs text-gray-400 mt-1">Directly delete any published content from the platform.</p>
+             </div>
+             <div className="overflow-x-auto">
+               <table className="min-w-full divide-y divide-gray-700">
+                 <thead className="bg-gray-800">
+                   <tr>
+                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Title</th>
+                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Author</th>
+                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
+                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Action</th>
+                   </tr>
+                 </thead>
+                 <tbody className="divide-y divide-gray-800">
+                   {approvedArticles.map(a => (
+                     <tr key={a._id} className="hover:bg-gray-800 transition">
+                       <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-bold">{a.title}</td>
+                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{a.authorName}</td>
+                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{new Date(a.createdAt).toLocaleDateString()}</td>
+                       <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <button 
+                            onClick={() => handleDeleteGlobalArticle(a._id)}
+                            className="text-red-400 hover:text-red-300 p-2"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                       </td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
+             </div>
+           </div>
+        </div>
+      )}
       
       <ConfirmationModal
         isOpen={itemToDelete !== null}

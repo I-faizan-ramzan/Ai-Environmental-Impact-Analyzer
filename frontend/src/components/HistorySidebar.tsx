@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { RefreshCw, X, History as HistoryIcon, CalendarDays, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, History as HistoryIcon, CalendarDays, RefreshCw, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -16,8 +16,9 @@ interface HistorySidebarProps {
 
 interface HistoryEntry {
   _id: string;
-  productName: string;
   footprintScore: number;
+  travelMode?: string;
+  dietType?: string;
   createdAt: string;
 }
 
@@ -29,8 +30,8 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
   // Deletion Modal State
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen && token) {
+  const fetchHistory = useCallback(() => {
+    if (token) {
       setLoading(true);
       api.get('/api/history', {
         headers: { Authorization: `Bearer ${token}` }
@@ -41,7 +42,18 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
       .catch(err => console.error("Failed to fetch history:", err))
       .finally(() => setLoading(false));
     }
-  }, [isOpen, token]);
+  }, [token]);
+
+  useEffect(() => {
+    // Fetch immediately if opened
+    if (isOpen) {
+      fetchHistory();
+    }
+
+    // Subscribe to global real-time synchronization updates
+    window.addEventListener('history-updated', fetchHistory);
+    return () => window.removeEventListener('history-updated', fetchHistory);
+  }, [isOpen, fetchHistory]);
 
   const handleDeleteConfirm = async () => {
     if (!itemToDelete || !token) return;
@@ -87,12 +99,22 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
                 </div>
                 <h2 className="text-xl font-bold">Analysis History</h2>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={fetchHistory}
+                  disabled={loading}
+                  className="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                  title="Refresh history"
+                >
+                  <RefreshCw className={cn("w-5 h-5", loading && "animate-spin")} />
+                </button>
+                <button
+                  onClick={onClose}
+                  className="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto w-full relative">
@@ -124,7 +146,7 @@ export function HistorySidebar({ isOpen, onClose }: HistorySidebarProps) {
                       </button>
                       
                       <h3 className="font-semibold text-lg text-gray-200 mb-1 pe-10 truncate">
-                        Behavior Log
+                        {item.travelMode && item.dietType ? `${item.travelMode} & ${item.dietType}` : 'Behavior Log'}
                       </h3>
                       
                       <div className="flex flex-wrap items-center gap-2 text-sm text-gray-400 mb-3">
