@@ -115,7 +115,7 @@ export default function SettingsPage() {
       if (res.data) {
         // Here we just re-sync the session by using the new token/data if provided
         // Our AuthContext 'login' method usually handles this
-        login(res.data); 
+        login(res.data, res.data.token); 
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
         setPassword(''); // Clear password field after success
       }
