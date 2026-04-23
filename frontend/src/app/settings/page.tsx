@@ -252,6 +252,9 @@ export default function SettingsPage() {
                         required
                       />
                     </div>
+                    <p className="text-[10px] text-gray-500 mt-2 ml-1 italic font-medium">
+                      * Name should be alphabets only
+                    </p>
                   </div>
 
                   <div>
@@ -280,6 +283,9 @@ export default function SettingsPage() {
                         placeholder="Enter new password (leave blank to keep current)"
                       />
                     </div>
+                    <p className="text-[10px] text-gray-500 mt-2 ml-1 italic font-medium">
+                      * Leave blank to keep current password
+                    </p>
                   </div>
 
                   {message && (

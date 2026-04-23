@@ -65,6 +65,9 @@ export default function SignupPage() {
                   setName(val);
                 }}
               />
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 ml-1 italic">
+                * Name should be alphabets only
+              </p>
             </div>
             <div>
               <input
@@ -76,6 +79,9 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 ml-1 italic">
+                * Enter a valid email address
+              </p>
             </div>
             <div>
               <input
@@ -87,6 +93,9 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 ml-1 italic">
+                * Minimum 6 characters recommended
+              </p>
             </div>
           </div>
 
