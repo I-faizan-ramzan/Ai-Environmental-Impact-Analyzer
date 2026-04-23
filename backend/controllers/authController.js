@@ -18,6 +18,12 @@ exports.registerUser = async (req, res) => {
       return res.status(400).json({ error: 'Please add all fields' });
     }
 
+    // Validate name (alphabets only)
+    const nameRegex = /^[A-Za-z\s]+$/;
+    if (!nameRegex.test(name)) {
+      return res.status(400).json({ error: 'Name must contain only alphabets and spaces' });
+    }
+
     // Check if user exists
     const userExists = await User.findOne({ email });
 
@@ -98,7 +104,15 @@ exports.updateProfile = async (req, res) => {
     const user = await User.findById(req.user._id);
 
     if (user) {
-      user.name = req.body.name || user.name;
+      const newName = req.body.name || user.name;
+      
+      // Validate name (alphabets only)
+      const nameRegex = /^[A-Za-z\s]+$/;
+      if (!nameRegex.test(newName)) {
+        return res.status(400).json({ error: 'Name must contain only alphabets and spaces' });
+      }
+
+      user.name = newName;
       
       if (req.body.password) {
         user.password = req.body.password;

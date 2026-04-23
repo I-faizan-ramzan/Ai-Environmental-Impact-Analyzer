@@ -243,7 +243,10 @@ export default function SettingsPage() {
                       <input
                         type="text"
                         value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^A-Za-z\s]/g, '');
+                          setName(val);
+                        }}
                         className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-green-400/50 transition-colors"
                         placeholder="Your Full Name"
                         required
