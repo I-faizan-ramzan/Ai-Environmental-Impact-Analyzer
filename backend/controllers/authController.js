@@ -18,6 +18,10 @@ exports.registerUser = async (req, res) => {
       return res.status(400).json({ error: 'Please add all fields' });
     }
 
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
     // Validate name (alphabets only)
     const nameRegex = /^[A-Za-z\s]+$/;
     if (!nameRegex.test(name)) {
@@ -115,6 +119,9 @@ exports.updateProfile = async (req, res) => {
       user.name = newName;
       
       if (req.body.password) {
+        if (req.body.password.length < 6) {
+          return res.status(400).json({ error: 'Password must be at least 6 characters' });
+        }
         user.password = req.body.password;
       }
 

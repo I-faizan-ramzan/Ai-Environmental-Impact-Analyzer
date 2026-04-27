@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { Menu, LogOut, Settings } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { ConfirmationModal } from './ConfirmationModal';
 
 export function Navbar({ onOpenHistory }: { onOpenHistory: () => void }) {
@@ -17,7 +17,8 @@ export function Navbar({ onOpenHistory }: { onOpenHistory: () => void }) {
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
-  
+  const pathname = usePathname();
+
   // Handle background blur on scroll
   useEffect(() => {
     const handleScroll = () => {
@@ -62,14 +63,14 @@ export function Navbar({ onOpenHistory }: { onOpenHistory: () => void }) {
         
         <div className="flex items-center gap-6">
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-300">
-            <Link href="/" className="hover:text-white transition-colors">Home</Link>
-            <Link href="/analyze" className="hover:text-white transition-colors">Analyze</Link>
-            <Link href="/learning" className="hover:text-white transition-colors">Learning</Link>
-            <Link href="/leaderboard" className="hover:text-white transition-colors">Leaderboard</Link>
+            <Link href="/" className={cn("transition-colors", pathname === '/' ? "text-purple-400" : "hover:text-white")}>Home</Link>
+            <Link href="/analyze" className={cn("transition-colors", pathname === '/analyze' ? "text-purple-400" : "hover:text-white")}>Analyze</Link>
+            <Link href="/learning" className={cn("transition-colors", pathname === '/learning' || pathname.startsWith('/learning/') ? "text-purple-400" : "hover:text-white")}>Learning</Link>
+            <Link href="/leaderboard" className={cn("transition-colors", pathname === '/leaderboard' ? "text-purple-400" : "hover:text-white")}>Leaderboard</Link>
             {user?.role === 'admin' && (
-              <Link href="/admin" className="hover:text-white transition-colors text-purple-400">Admin</Link>
+              <Link href="/admin" className={cn("transition-colors", pathname === '/admin' ? "text-purple-400 font-bold" : "text-purple-400/70 hover:text-purple-400")}>Admin</Link>
             )}
-            <Link href="/about" className="hover:text-white transition-colors">About</Link>
+            <Link href="/about" className={cn("transition-colors", pathname === '/about' ? "text-purple-400" : "hover:text-white")}>About</Link>
           </div>
           
           <div className="flex items-center gap-2 sm:gap-4 relative">
@@ -137,12 +138,12 @@ export function Navbar({ onOpenHistory }: { onOpenHistory: () => void }) {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-zinc-900 border-b border-white/10 shadow-lg px-4 py-4 flex flex-col gap-4">
-          <Link href="/" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-md">Home</Link>
-          <Link href="/analyze" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-md">Analyze</Link>
-          <Link href="/learning" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-md">Learning</Link>
-          <Link href="/leaderboard" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-md">Leaderboard</Link>
+          <Link href="/" onClick={() => setMobileMenuOpen(false)} className={cn("block px-4 py-2 text-base font-medium rounded-md", pathname === '/' ? "text-purple-400 bg-white/5" : "text-gray-300 hover:text-white hover:bg-white/5")}>Home</Link>
+          <Link href="/analyze" onClick={() => setMobileMenuOpen(false)} className={cn("block px-4 py-2 text-base font-medium rounded-md", pathname === '/analyze' ? "text-purple-400 bg-white/5" : "text-gray-300 hover:text-white hover:bg-white/5")}>Analyze</Link>
+          <Link href="/learning" onClick={() => setMobileMenuOpen(false)} className={cn("block px-4 py-2 text-base font-medium rounded-md", pathname === '/learning' || pathname.startsWith('/learning/') ? "text-purple-400 bg-white/5" : "text-gray-300 hover:text-white hover:bg-white/5")}>Learning</Link>
+          <Link href="/leaderboard" onClick={() => setMobileMenuOpen(false)} className={cn("block px-4 py-2 text-base font-medium rounded-md", pathname === '/leaderboard' ? "text-purple-400 bg-white/5" : "text-gray-300 hover:text-white hover:bg-white/5")}>Leaderboard</Link>
           {user?.role === 'admin' && (
-            <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-base font-medium text-purple-400 hover:text-purple-300 hover:bg-white/5 rounded-md">Admin Dashboard</Link>
+            <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className={cn("block px-4 py-2 text-base font-medium rounded-md", pathname === '/admin' ? "text-purple-400 bg-white/5 font-bold" : "text-purple-400/70 hover:text-purple-400 hover:bg-white/5")}>Admin Dashboard</Link>
           )}
           <button 
             onClick={() => {

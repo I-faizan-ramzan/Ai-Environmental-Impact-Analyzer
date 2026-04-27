@@ -22,27 +22,38 @@ const calculateLevel = (points) => {
 exports.analyzeBehavior = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { electricityUsage, waterUsage, wasteGeneration, travelDistance, travelMode, dietType } = req.body;
+    const { 
+      electricityUsage, waterUsage, wasteGeneration, travelDistance, travelMode, dietType,
+      fuelUsage, liquidConsumption, vehicleType 
+    } = req.body;
 
     if (electricityUsage === undefined || waterUsage === undefined) {
-      return res.status(400).json({ error: 'Please provide all behavior attributes' });
+      return res.status(400).json({ error: 'Please provide all core behavior attributes' });
     }
 
     // Connect to Google Gemini
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Using a more stable model name
 
     const prompt = `
       You are an expert Environmental Impact Analyst and Personal Climate Coach.
-      Analyze the following weekly user behavior:
+      Analyze the following user behavior using a Multi-Factor Environmental Model. 
+      Consider both core metrics and optional advanced metrics to calculate a highly accurate footprint.
+
+      CORE METRICS:
       - Electricity Usage: ${electricityUsage} kWh
-      - Water Usage: ${waterUsage} Liters
+      - General Water Usage: ${waterUsage} Liters
       - Waste Generation: ${wasteGeneration} kg
       - Travel: ${travelDistance} km via ${travelMode}
       - Diet: ${dietType}
 
+      OPTIONAL ADVANCED METRICS (Factor these heavily if provided):
+      - Direct Fuel Usage: ${fuelUsage ? fuelUsage + ' Liters/Gallons' : 'Not provided'}
+      - Specific Liquid Consumption: ${liquidConsumption || 'Not provided'} (Note: Bottled water & Sugary drinks have high impact, Tap water has low impact)
+      - Vehicle Type: ${vehicleType || 'Not provided'} (Note: Electric significantly reduces travel impact, Hybrid reduces it moderately, Fuel increases it)
+
       TASK: Generate a comprehensive personal environmental analysis.
-      1. footprintScore: A number from 1 (Green / Excellent) to 100 (Disaster / Terrible) representing their eco-impact.
-      2. keyFindings: An array of 3 specific bullet points highlighting harmful habits or positive lifestyle choices based on their exact input.
+      1. footprintScore: A number from 1 (Best Case Scenario / Green / Excellent) to 100 (Worst Case Scenario / Disaster / Terrible) representing their eco-impact. Adjust this score dynamically based on the advanced metrics (e.g., if Vehicle Type is Electric, lower the score; if Liquid Consumption is Bottled Water, raise the score).
+      2. keyFindings: An array of 3 specific bullet points highlighting harmful habits or positive lifestyle choices based on their exact input (reference the advanced metrics if they provided them).
       3. alternatives: An array of 3 personalized recommendations with { title, desc } to improve their habits.
 
       You MUST format your response as a valid RAW JSON object matching this exact schema:
@@ -89,6 +100,9 @@ exports.analyzeBehavior = async (req, res) => {
       travelDistance: Number(travelDistance),
       travelMode,
       dietType,
+      fuelUsage: fuelUsage ? Number(fuelUsage) : undefined,
+      liquidConsumption: liquidConsumption || undefined,
+      vehicleType: vehicleType || undefined,
       footprintScore: genData.footprintScore,
       analysisDetails: analysisDetails,
     });
