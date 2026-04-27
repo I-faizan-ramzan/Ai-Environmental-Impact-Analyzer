@@ -45,6 +45,37 @@ export default function LeaderboardPage() {
         </p>
       </div>
 
+      {/* Gamification Explanation Card */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-card p-6 mb-12 border-l-4 border-l-cyan-400"
+      >
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <Award className="w-5 h-5 text-cyan-400" />
+          How Points & Levels Work
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-300">
+          <div>
+            <h3 className="font-semibold text-white mb-2">Earning Points</h3>
+            <ul className="space-y-2 list-disc list-inside">
+              <li><span className="text-green-400 font-medium">+10 Points:</span> For every daily environmental analysis you complete.</li>
+              <li><span className="text-yellow-400 font-medium">+100 Points:</span> For every correct answer in the Eco-Quiz.</li>
+              <li><span className="text-purple-400 font-medium">+500 Points:</span> When an admin approves an article you wrote for the Learning Hub.</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="font-semibold text-white mb-2">Leveling Up</h3>
+            <p className="mb-2">Your <strong>Level</strong> is a direct reflection of your dedication to sustainability.</p>
+            <ul className="space-y-2 list-disc list-inside">
+              <li>You start at Level 1.</li>
+              <li>For every <strong>50 points</strong> you earn, you automatically level up!</li>
+              <li>Higher levels signify greater environmental awareness and community contribution.</li>
+            </ul>
+          </div>
+        </div>
+      </motion.div>
+
       <div className="space-y-4">
         {users.map((user, index) => (
           <motion.div
