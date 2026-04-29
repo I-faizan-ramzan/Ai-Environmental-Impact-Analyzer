@@ -32,7 +32,7 @@ exports.analyzeBehavior = async (req, res) => {
     }
 
     // Connect to Google Gemini
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Using a more stable model name
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }); // Using a more stable model name
 
     const prompt = `
       You are an expert Environmental Impact Analyst and Personal Climate Coach.
@@ -68,15 +68,38 @@ exports.analyzeBehavior = async (req, res) => {
       }
     `;
 
-    const result = await model.generateContent(prompt);
-    let textResponse = result.response.text();
-    
-    // Aggressive JSON Trapping to ignore Gemini Markdown wrapper
-    const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      textResponse = jsonMatch[0];
-    } else {
-      textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+    let textResponse;
+    try {
+      const result = await model.generateContent(prompt);
+      textResponse = result.response.text();
+      
+      // Aggressive JSON Trapping to ignore Gemini Markdown wrapper
+      const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        textResponse = jsonMatch[0];
+      } else {
+        textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+      }
+    } catch (apiError) {
+      console.error('Gemini API Error:', apiError.message);
+      console.log('Using fallback response due to AI API failure.');
+      
+      // Fallback dynamic response
+      const fallbackScore = Math.min(100, Math.max(1, (Number(electricityUsage) / 10) + (Number(waterUsage) / 20) + (Number(wasteGeneration) * 2)));
+      
+      textResponse = JSON.stringify({
+        footprintScore: Math.round(fallbackScore) || 50,
+        keyFindings: [
+          "AI Analysis degraded due to API limit - using fallback estimation.",
+          `Electricity usage recorded at ${electricityUsage} kWh.`,
+          `Water usage recorded at ${waterUsage} Liters.`
+        ],
+        alternatives: [
+          { "title": "Energy Conservation", "desc": "Consider using energy-efficient appliances and turning off lights." },
+          { "title": "Water Efficiency", "desc": "Fix any leaking taps and use water-saving fixtures." },
+          { "title": "Waste Reduction", "desc": "Start a compost bin for organic waste and recycle." }
+        ]
+      });
     }
 
     let genData;
