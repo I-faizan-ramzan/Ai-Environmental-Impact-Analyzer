@@ -100,3 +100,6 @@ To encourage sustainable behavior, the system includes a reward mechanism:
   createdAt: Date             // Timestamp
 }
 ```
+
+
+npm install
