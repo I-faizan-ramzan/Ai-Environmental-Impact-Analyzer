@@ -68,7 +68,7 @@ The backend serves as the core engine of the application, handling user authenti
 
 Because this is a decentralized application aimed at transparency, it incorporates blockchain technology to ensure data immutability and trust.
 
-### Smart Contract Development
+<!-- ### Smart Contract Development
 *   **Hardhat & Ethers.js**
     *   **Why**: Hardhat is an Ethereum development environment for compiling, deploying, testing, and debugging smart contracts. Ethers.js is a library for interacting with the Ethereum blockchain and its ecosystem.
 *   **OpenZeppelin Contracts**
@@ -78,8 +78,8 @@ Because this is a decentralized application aimed at transparency, it incorporat
 
 ### Decentralized Storage
 *   **IPFS (InterPlanetary File System), Pinata & Arweave**
-    *   **Why**: These tools are used for decentralized file storage. Instead of storing product images or extensive reports on centralized servers, they are pinned to IPFS/Arweave, ensuring they cannot be arbitrarily altered or deleted, maintaining the integrity of the environmental impact reports.
+    *   **Why**: These tools are used for decentralized file storage. Instead of storing product images or extensive reports on centralized servers, they are pinned to IPFS/Arweave, ensuring they cannot be arbitrarily altered or deleted, maintaining the integrity of the environmental impact reports. -->
 
-### Data Indexing
+<!-- ### Data Indexing
 *   **The Graph (@graphprotocol)**
-    *   **Why**: A decentralized protocol for indexing and querying blockchain data. It allows the frontend to efficiently fetch complex smart contract data using GraphQL, rather than making multiple slow, direct calls to the blockchain.
+    *   **Why**: A decentralized protocol for indexing and querying blockchain data. It allows the frontend to efficiently fetch complex smart contract data using GraphQL, rather than making multiple slow, direct calls to the blockchain. -->
