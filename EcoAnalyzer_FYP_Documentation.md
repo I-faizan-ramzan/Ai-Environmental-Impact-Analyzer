@@ -1,4 +1,4 @@
-# FINAL YEAR PROJECT
+<!-- # FINAL YEAR PROJECT
 
 ## Ai-Environmental-Impact-Analyzer: AI-Powered Environmental Footprint Assessment Application
 
@@ -193,4 +193,4 @@ The **Ai-Environmental-Impact-Analyzer** successfully fulfills the overarching o
 - **A.1.2** Registration & Login Screen UI (Light/Dark Theme)
 - **A.1.3** AI Product Analyzer Dashboard showing Input Field and Sidebar
 - **A.1.4** Result Output highlighting Score, Breakdown and Alternatives!
-- **A.1.5** Admin Dashboard viewing global platform history traffic.
+- **A.1.5** Admin Dashboard viewing global platform history traffic. -->

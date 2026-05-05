@@ -75,7 +75,7 @@ To run this project locally, follow these steps:
 
 ---
 
-## 👥 The Team
+<!-- ## 👥 The Team
 - **Iqra Nazim:** Lead Frontend Developer
 - **Ezzah Khan:** Backend Developer
-- **Amina Hassan:** Design & Documentation
+- **Amina Hassan:** Design & Documentation -->
