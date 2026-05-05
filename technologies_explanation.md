@@ -64,9 +64,9 @@ The backend serves as the core engine of the application, handling user authenti
 
 ---
 
-## 3. Web3 & Blockchain Technologies (Project Root)
+<!-- ## 3. Web3 & Blockchain Technologies (Project Root)
 
-Because this is a decentralized application aimed at transparency, it incorporates blockchain technology to ensure data immutability and trust.
+Because this is a decentralized application aimed at transparency, it incorporates blockchain technology to ensure data immutability and trust. -->
 
 <!-- ### Smart Contract Development
 *   **Hardhat & Ethers.js**
@@ -80,6 +80,13 @@ Because this is a decentralized application aimed at transparency, it incorporat
 *   **IPFS (InterPlanetary File System), Pinata & Arweave**
     *   **Why**: These tools are used for decentralized file storage. Instead of storing product images or extensive reports on centralized servers, they are pinned to IPFS/Arweave, ensuring they cannot be arbitrarily altered or deleted, maintaining the integrity of the environmental impact reports. -->
 
-<!-- ### Data Indexing
-*   **The Graph (@graphprotocol)**
-    *   **Why**: A decentralized protocol for indexing and querying blockchain data. It allows the frontend to efficiently fetch complex smart contract data using GraphQL, rather than making multiple slow, direct calls to the blockchain. -->
+---
+
+## 4. Data Models & Storage (MongoDB)
+
+The application utilizes MongoDB to store and manage data in a flexible document-based format. The core data models include:
+
+*   **User Profiles**: Manages account details, encrypted passwords, user roles (Admin vs. Regular User), and gamification progress including total eco-points, levels, and earned badges.
+*   **Environmental Behavior Logs**: Stores the heart of the application's data—user inputs for electricity, water, and travel, as well as the structured JSON output from the Gemini AI (footprint scores and tailored recommendations).
+*   **Educational Articles**: Contains community or admin-submitted articles for the Learning Hub, tracking their content, authorship, and moderation status.
+*   **Quiz Repository**: Stores awareness-building questions, multiple-choice options, correct answers with explanations, and the associated points awarded to users for participation.
