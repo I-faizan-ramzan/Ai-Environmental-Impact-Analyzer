@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Leaf, History, User as UserIcon } from 'lucide-react';
+import { Leaf, History, User as UserIcon, Menu, LogOut, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
-import { Menu, LogOut, Settings } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { ConfirmationModal } from './ConfirmationModal';
 
@@ -60,7 +59,7 @@ export function Navbar({ onOpenHistory }: { onOpenHistory: () => void }) {
             Eco<span className="text-green-400">Analyzer</span>
           </span>
         </Link>
-        
+
         <div className="flex items-center gap-6">
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-300">
             <Link href="/" className={cn("transition-colors", pathname === '/' ? "text-purple-400" : "hover:text-white")}>Home</Link>
